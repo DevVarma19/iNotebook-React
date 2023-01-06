@@ -24,13 +24,13 @@ router.post(
     // If there are errors -> Return bad request
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({ success:false, errors: errors.array() });
     }
 
     try {
       let user = await User.findOne({ email: req.body.email });
       if (user) {
-        return res.status(400).json({ error: "User already exists" });
+        return res.status(400).json({ success:false, error: "User already exists" });
       }
 
       // Hashing the password
@@ -44,12 +44,10 @@ router.post(
           },
         };
         const authToken = jwt.sign(payLoad, JWT_SECRET);
-        res
-          .status(201)
-          .json({ authtoken: authToken, message: "User added successfully" });
+        res.status(201).json({ authtoken: authToken, success:true, message: "User added successfully" });
       });
     } catch (error) {
-      res.status(500).json({ error: "Internal Server Error" });
+      res.status(500).json({ success:false, error: "Internal Server Error" });
     }
   }
 );
@@ -67,19 +65,19 @@ router.post(
     // If there are errors -> Return bad request
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({ success:false, errors: errors.array() });
     }
 
     const { email, password } = req.body;
     try {
       let user = await User.findOne({ email });
       if (!user) {
-        return res.status(400).json({ error: "User doesn't exist!" });
+        return res.status(400).json({ success:false,error: "User doesn't exist!" });
       }
 
       const passwordCompare = await bcrypt.compare(password, user.password);
       if (!passwordCompare) {
-        return res.status(400).json({ error: "Invalid credentails!" });
+        return res.status(400).json({ success:false,error: "Invalid credentails!" });
       }
 
       const payLoad = {
@@ -93,10 +91,11 @@ router.post(
         .status(201)
         .json({
           authtoken: authToken,
+          success:true,
           message: "User logged in successfully!",
         });
     } catch (error) {
-      res.status(500).json({ error: "Internal Server Error" });
+      res.status(500).json({ success:false, error: "Internal Server Error" });
     }
   }
 );
@@ -108,7 +107,7 @@ router.post("/getuser", fetchUser, async (req, res) => {
     const user = await User.findById(userId).select("-password");
     res.send(user);
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ success:false,error: "Internal Server Error" });
   }
 });
 
